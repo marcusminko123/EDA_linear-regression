@@ -18,23 +18,110 @@ library(openintro)
 ```{r score-distribution}
 
 evals %>% 
-  ggplot(aes(x = score)) + geom_histogram (bindwidth = .25)
+  ggplot(aes(x = score)) + geom_histogram (bindwidth = .25, color = "white", fill = "navy") +
+  labs(x = "Evalution Score")
 
 evals %>% 
   summarize (mean(score), median(score), min(score), max(score))
 
 # score distribution is somewhat left-skewed; in general, students give pretty scores
+
+evals %>% 
+  ggplot(aes(x = score, y = bty_avg)) + 
+  geom_point() + 
+  labs(y = "Beauty Rating", x = "Evalution Score")
+         
+evals %>% 
+  ggplot(aes(x = score, y = bty_avg)) + 
+  geom_jitter() +
+  labs(y = "Beauty Rating", x = "Evalution Score")
+
+#The geom_point plot looks like there are fewer data than there actually is
+
 ```
-Remove this text, and add your answer for Exercise 1 here.
-Add code chunks as needed.
-Don't forget to label your code chunk.
-Do not use spaces in code chunk labels.
 
-### Exercise 2
+### Linear Regression Model
 
-...
+```{r linear-regression}
 
-Add exercise headings as needed.
+m_bty = lm(score~bty_avg, data = evals) #Create the linear regression
+summary(m_bty)
+evals %>% 
+ggplot(aes(x=score, y=bty_avg)) + 
+  geom_point()+
+  geom_smooth(method=lm, 
+              linetype="solid") +
+  geom_jitter() +
+  labs(y = "Beauty Rating", x = "Evalution Score")
 
-## 
-For Exercise 12, relevel() function can be helpful! 
+
+#Regression line orange, no shading for error
+
+m_bty = lm(score~bty_avg, data = evals) #Create the linear regression
+summary(m_bty)
+ggplot(evals, aes(x=score, y=bty_avg)) + 
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE, linetype="solid",
+             color="orange") +
+        geom_jitter() +
+  labs(y = "Beauty Rating", x = "Evalution Score")
+
+```
+score = 3.88 + .07(bty_avg)
+
+Slope = .07, significant p-value. So for every one-unit increase in beauty score, there is a .07 increase in the prof evaluation score
+
+Intercept: For a beauty of zero, you would expect an prof evaluation score of 3.88. This doesn't make much sense, since a score of zero is not possible (scales 1-10)
+
+R-squared = 0.04, beauty rating accounts for 4% of the variance in average professor evaluation scores.
+
+### Regression line & Gender
+
+```{r gender-regression}
+
+m_gen = lm(score~gender, data = evals)
+summary(m_gen)
+
+#y= .14(x) + 4.09 
+#males: y = .14(0) + 4.09 predicted score for males is 4.09
+#females: y = .14(1) + 4.09 predicted score for females is 4.23
+
+m_rank = lm(score~rank, data = evals)
+summary(m_rank)
+
+#y= 4.28 -.13(X1) + -.15(X2)
+#predicted score for teaching rank is 4.28
+#predicted score for tenure track is 4.15
+#predicted score for tenured is 4.13
+```
+
+### Relevel Rank positions
+```{r rank-relevel}
+
+rank_evals <- evals%>%
+  mutate(rank_relevel = case_when(rank== "tenure track" ~ 0,
+                          rank== "teaching" ~ 1,
+                          rank== "tenured" ~ 2))
+m_rank_relevel<- lm( score~ rank_relevel, data = rank_evals) #Create the linear regression
+summary(m_rank_relevel)
+
+#y = 4.2 - .02(rank)
+#each step up the rank is associated with a .02 decrease in prof eval score (non-significant)
+#rank only accounts for .001 percent of variance in prof eval score.
+```
+
+###Tenure Eligibility
+``` {r tenure-eligible}
+evals <- evals%>% 
+  mutate(tenure_eligible = if_else(rank == "teaching", "No", "Yes"))
+
+#Regression line based on tenure eligibility
+
+m_tenure_eligible = lm(score ~ tenure_eligible, data = evals) 
+summary(m_tenure_eligible)
+
+## y = 4.28 -.14(tenure_eligible)
+# tenure eligible faculty have predicted prof eval scores .14 lower (4.14) than non-tenure eligible faculty (4.28)
+#R-squared: tenure eligibility accounted for .01 percent of the variance in prof evaluation score
+```
+
