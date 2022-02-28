@@ -1,7 +1,7 @@
 ---
 title: "Lab 09 - Grading the professor, Pt. 1"
-author: "Insert your name here"
-date: "Insert date here"
+author: "Marcus Minko"
+date: "02-28-2022"
 output: github_document
 ---
 
@@ -9,12 +9,22 @@ output: github_document
 
 ```{r load-packages, message=FALSE}
 library(tidyverse) 
-library(tidymodels)
+library(broom)
 library(openintro)
 ```
 
-### Exercise 1
+### View Data Distribrution
 
+```{r score-distribution}
+
+evals %>% 
+  ggplot(aes(x = score)) + geom_histogram (bindwidth = .25)
+
+evals %>% 
+  summarize (mean(score), median(score), min(score), max(score))
+
+# score distribution is somewhat left-skewed; in general, students give pretty scores
+```
 Remove this text, and add your answer for Exercise 1 here.
 Add code chunks as needed.
 Don't forget to label your code chunk.
